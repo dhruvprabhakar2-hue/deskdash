@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Desk Cockpit</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#07090c">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{--bg:#07090c;--card:#12161c;--tx:#f2f5f8;--dim:#7b8794;--ac:#22d3ee;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,Roboto,sans-serif;overflow:hidden}
+#app{height:100%;display:flex;flex-direction:column;gap:8px;padding:8px;transition:filter .3s}
+#shift{flex:1;display:flex;flex-direction:column;gap:8px;min-height:0;transition:transform 2s}
+button{font:inherit;color:inherit;background:var(--card);border:0;border-radius:14px;min-height:44px;min-width:44px;padding:0 12px}
+button.on{background:var(--ac);color:#000}
+.bar{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--dim);flex-wrap:wrap}
+.bar .sp{flex:1}.bar button{font-size:12px;min-height:36px;padding:0 10px}
+.main{flex:1;display:flex;flex-direction:column;gap:8px;min-height:0}
+@media (orientation:landscape){.main{flex-direction:row}}
+.card{background:var(--card);border-radius:20px;padding:14px;min-height:0;position:relative}
+#clk{flex:1.2;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+#face{width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1}
+.t{font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;font-size:min(22vw,22vh)}
+.neon{font-weight:200;color:var(--ac);text-shadow:0 0 18px var(--ac),0 0 40px var(--ac)}
+.d{color:var(--dim);font-size:15px;margin-top:4px}
+.bdg{display:inline-block;background:var(--ac);color:#000;border-radius:8px;padding:2px 8px;font-weight:700;font-size:12px;margin-right:6px}
+.arc{height:4px;background:#222;border-radius:3px;width:70%;margin-top:8px}.arc i{display:block;height:100%;background:var(--ac);border-radius:3px;box-shadow:0 0 8px var(--ac)}
+.flip{display:flex;gap:6px;align-items:center}
+.fl{background:#1b2028;border-radius:10px;padding:0 .1em;font-weight:800;font-variant-numeric:tabular-nums;font-size:min(20vw,20vh);position:relative;line-height:1.15}
+.fl:after{content:"";position:absolute;left:0;right:0;top:50%;height:2px;background:#000}
+.fl.f{animation:fp .35s}@keyframes fp{from{transform:rotateX(70deg);opacity:.4}to{transform:none;opacity:1}}
+#ses{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:14px}
+#ses b{font-variant-numeric:tabular-nums;font-size:20px}
+#sp{flex:1;display:flex;flex-direction:column;gap:8px}
+#art{width:min(46vw,30vh);aspect-ratio:1;border-radius:16px;align-self:center;display:flex;align-items:center;justify-content:center;font-size:48px;transition:background 1s}
+#ti{font-size:22px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ar{color:var(--dim);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pr{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--dim)}
+input[type=range]{flex:1;accent-color:var(--ac);height:30px}
+.ctl{display:flex;justify-content:space-between;gap:6px}.ctl button{flex:1;min-height:56px;font-size:22px}
+#feed{height:34%;min-height:130px;display:flex;flex-direction:column;gap:6px}
+.tabs{display:flex;gap:5px;overflow-x:auto}.tabs button{font-size:12px;min-height:34px;white-space:nowrap;flex:none}
+#cd{flex:1;overflow:auto;font-size:15px;animation:fi .5s}@keyframes fi{from{opacity:0}to{opacity:1}}
+.row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #1d232b}
+.up{color:#34d399}.dn{color:#f87171}
+.alert{background:#7f1d1d;border-radius:12px;padding:8px 10px;margin-bottom:6px}
+.src{color:var(--dim);font-size:12px}
+body.clock #sp .full,body.clock #feed{display:none}
+body.clock #sp{flex:none}body.clock .main{flex-direction:column}
+body.clock #sp #art,body.clock #sp #ti,body.clock #sp #ar,body.clock #sp .pr{display:none}
+body.feed #clk,body.feed #sp{display:none}body.feed #feed{height:100%}
+#set{position:fixed;inset:0;background:#000d;display:none;align-items:flex-end;z-index:5}
+#set.o{display:flex}#set>div{background:#161b22;width:100%;max-height:85%;overflow:auto;border-radius:22px 22px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px}
+label{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px}
+select{background:#0b0e12;color:var(--tx);border:1px solid #2a3340;border-radius:10px;min-height:40px;padding:0 8px}
+</style></head><body>
+<div id="app"><div id="shift">
+<div class="bar"><span id="bt">🔊 Desk Speaker (BT)</span><span id="wf">📶 Wi-Fi</span><span id="bat">🔋 --</span><span class="sp"></span>
+<button data-v="">Cockpit</button><button data-v="clock">Clock</button><button data-v="feed">Feed</button><button id="gear">⚙</button></div>
+<div class="main">
+<div class="card" id="clk"><div id="face" aria-live="off"></div>
+<div id="ses"><span>🎮 Session</span><b id="sv">00:00:00</b><button id="sg">Start</button><button id="sr">Reset</button></div></div>
+<div class="card" id="sp"><div id="art"></div><div id="ti"></div><div id="ar"></div>
+<div class="pr"><span id="el">0:00</span><input id="sk" type="range" min="0" max="100" value="0"><span id="rm">-0:00</span></div>
+<div class="ctl"><button id="sh">🔀</button><button id="pv">⏮</button><button id="pp">⏸</button><button id="nx">⏭</button><button id="rp">🔁</button><button id="lk">♡</button></div></div>
+</div>
+<div class="card" id="feed"><div class="tabs" id="tabs"></div><div id="cd"></div></div>
+</div></div>
+<div id="set"><div>
+<label>Clock face<select id="s_face"><option value="0">CarPlay Digital</option><option value="1">Flip Clock</option><option value="2">Racing Gauge</option><option value="3">Minimal Neon</option></select></label>
+<label>24-hour<input type="checkbox" id="s_24"></label>
+<label>Show seconds<input type="checkbox" id="s_sec" checked></label>
+<label>Accent<select id="s_ac"><option value="#22d3ee">Cyber cyan</option><option value="#ef4444">Crimson</option><option value="#f59e0b">Amber</option><option value="#10b981">Emerald</option><option value="album">Album art</option></select></label>
+<label>Card cycle (sec)<select id="s_cy"><option>0</option><option>10</option><option selected>15</option><option>20</option></select></label>
+<label>Brightness<select id="s_br"><option value="1">Day</option><option value=".7">Gaming</option><option value=".4">Night</option></select></label>
+<label>Keep screen awake<input type="checkbox" id="s_aw" checked></label>
+<label>Break reminder (min, 0 = off)<select id="s_bk"><option>0</option><option>60</option><option selected>90</option></select></label>
+<label>Demo mode (live APIs need the self-hosted build)<input type="checkbox" checked disabled></label>
+<button id="x">Close</button></div></div>
+<script>
+var $=function(i){return document.getElementById(i)},S={face:0,h24:0,sec:1,ac:"#22d3ee",cy:15,br:1,aw:1,bk:90};
+try{var z=JSON.parse(localStorage.getItem("dd")||"{}");for(var k in z)S[k]=z[k]}catch(e){}
+function save(){try{localStorage.setItem("dd",JSON.stringify(S))}catch(e){}}
+var p2=function(n){return(n<10?"0":"")+n},D=["SUN","MON","TUE","WED","THU","FRI","SAT"],M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+/* ---- clock ---- */
+var lastMin=-1,fk=-1;
+function tick(){var n=new Date(),h=n.getHours(),m=n.getMinutes(),s=n.getSeconds(),ap=h<12?"AM":"PM",hh=S.h24?p2(h):String(h%12||12);
+var f=$("face"),dt=D[n.getDay()]+" · "+n.getDate()+" "+M[n.getMonth()]+" "+n.getFullYear(),utc=" · UTC "+p2(n.getUTCHours())+":"+p2(n.getUTCMinutes());
+var sec=S.sec?":"+p2(s):"",info='<div class="d"><span class="bdg">'+D[n.getDay()]+'</span>'+dt.slice(6)+utc+(S.h24?"":" · "+ap)+'</div>';
+if(S.face!=fk){fk=S.face;f.innerHTML="";lastMin=-1}
+if(S.face==0){f.innerHTML='<div class="t">'+hh+':'+p2(m)+'<span style="font-size:.4em;color:var(--dim)">'+sec+'</span></div><div class="arc"><i style="width:'+(s/59*100)+'%"></i></div>'+info}
+else if(S.face==3){f.innerHTML='<div class="t neon">'+hh+':'+p2(m)+'</div>'+info}
+else if(S.face==1){if(lastMin!=m||!f.firstChild){var o=f.dataset.k||"",nk=hh+p2(m);f.dataset.k=nk;f.innerHTML='<div class="flip">'+[hh[0]||"",hh.slice(-1),":",p2(m)[0],p2(m)[1]].map(function(c,i){return c==":"?'<b style="font-size:min(14vw,14vh)">:</b>':'<div class="fl'+(o&&o.charAt(i>2?i-1:i)!=nk.charAt(i>2?i-1:i)?" f":"")+'">'+c+'</div>'}).join("")+'</div>'+info;lastMin=m}}
+else{var a=function(d){return d*Math.PI/180},H=(h%12+m/60)*30,Mi=(m+s/60)*6,L=function(d,l,w,c){return'<line x1="100" y1="100" x2="'+(100+l*Math.sin(a(d)))+'" y2="'+(100-l*Math.cos(a(d)))+'" stroke="'+c+'" stroke-width="'+w+'" stroke-linecap="round"/>'},tk="";for(var i=0;i<60;i++){var r=i%5?92:84;tk+='<line x1="'+(100+96*Math.sin(a(i*6)))+'" y1="'+(100-96*Math.cos(a(i*6)))+'" x2="'+(100+r*Math.sin(a(i*6)))+'" y2="'+(100-r*Math.cos(a(i*6)))+'" stroke="#667" stroke-width="'+(i%5?1:3)+'"/>'}
+f.innerHTML='<svg viewBox="0 0 200 200" style="width:min(70vw,38vh)"><circle cx="100" cy="100" r="98" fill="#0b0e12" stroke="#2a3340" stroke-width="3"/>'+tk+'<text x="100" y="140" fill="#aab" font-size="16" text-anchor="middle" font-family="monospace">'+p2(h)+':'+p2(m)+'</text>'+L(H,50,6,"#fff")+L(Mi,76,4,"#fff")+L(s*6,84,2,"#ef4444")+'<circle cx="100" cy="100" r="5" fill="#ef4444"/></svg>'+info}
+sessTick(n);}
+/* ---- session ---- */
+var sRun=0,sAcc=0,sT0=0,warned=0;
+function sessTick(){var t=sAcc+(sRun?Date.now()-sT0:0),s=Math.floor(t/1e3);$("sv").textContent=p2(Math.floor(s/3600))+":"+p2(Math.floor(s/60)%60)+":"+p2(s%60);
+if(S.bk&&sRun&&s>=S.bk*60*(warned+1)){warned++;$("sv").style.color="#f59e0b";$("sg").textContent="☕ Take a break";setTimeout(function(){$("sv").style.color="";$("sg").textContent="Pause"},8000)}}
+$("sg").onclick=function(){if(sRun){sAcc+=Date.now()-sT0;sRun=0;$("sg").textContent="Resume"}else{sT0=Date.now();sRun=1;$("sg").textContent="Pause"}};
+$("sr").onclick=function(){sAcc=0;sRun=0;warned=0;sT0=Date.now();$("sg").textContent="Start";sessTick()};
+/* ---- spotify (demo) ---- */
+var TR=[["Neon Highway","Synthwave Kid","Midnight Drive",212,"#7c3aed"],["Frame Rate","The Lag Spikes","Ping 0",187,"#ef4444"],["Boost Pad","Rocket Pilot","Overtime",241,"#f59e0b"],["Chill Lobby","Lo-Fi Guild","Queue Music",198,"#10b981"]],ti=0,pos=0,play=1,shuf=0,rep=0,lk=[];
+function loadTr(){var t=TR[ti];$("ti").textContent=t[0];$("ar").textContent=t[1]+" · "+t[2]+"  [E] HQ";$("art").style.background="linear-gradient(135deg,"+t[4]+",#000)";$("art").textContent="♪";$("sk").max=t[3];$("lk").textContent=lk[ti]?"♥":"♡";accent()}
+function fm(s){return Math.floor(s/60)+":"+p2(Math.floor(s)%60)}
+function spTick(){var t=TR[ti];if(play){pos+=1;if(pos>=t[3]){nxt()}}$("sk").value=pos;$("el").textContent=fm(pos);$("rm").textContent="-"+fm(t[3]-pos)}
+function nxt(){ti=shuf?Math.floor(Math.random()*TR.length):(rep==2?ti:(ti+1)%TR.length);pos=0;loadTr()}
+$("pp").onclick=function(){play=!play;$("pp").textContent=play?"⏸":"▶"};
+$("nx").onclick=nxt;$("pv").onclick=function(){if(pos>3)pos=0;else ti=(ti+TR.length-1)%TR.length,pos=0;loadTr()};
+$("sh").onclick=function(){shuf=!shuf;this.className=shuf?"on":""};
+$("rp").onclick=function(){rep=(rep+1)%3;this.className=rep?"on":"";this.textContent=rep==2?"🔂":"🔁"};
+$("lk").onclick=function(){lk[ti]=!lk[ti];this.textContent=lk[ti]?"♥":"♡"};
+$("sk").oninput=function(){pos=+this.value};
+function accent(){var c=S.ac=="album"?TR[ti][4]:S.ac;document.documentElement.style.setProperty("--ac",c)}
+/* ---- cards ---- */
+var C={Weather:function(){return'<div style="font-size:34px;font-weight:800">18° <span style="font-size:16px;font-weight:400">☁ Partly cloudy</span></div><div class="row"><span>Feels 16° · H 21° L 11°</span><span>💧 62% · 💨 14 km/h</span></div><div class="row"><span>AQI 42 Good · Rain 20%</span></div><div class="row"><span>Now 18°</span><span>3pm 20°</span><span>6pm 17°</span><span>9pm 14°</span></div>'},
+Stocks:function(){var r=[["NVDA",138.2,2.1],["AAPL",231.5,-0.4],["MSFT",420.7,0.8],["SPY",578.3,0.3],["SONY",19.8,-1.2]];return'<div class="src">Market: Open · updated 14:32</div>'+r.map(function(x){return'<div class="row"><b>'+x[0]+'</b><span>'+x[1].toFixed(2)+'</span><span class="'+(x[2]>=0?"up":"dn")+'">'+(x[2]>=0?"▲ ":"▼ ")+Math.abs(x[2])+'% ∿</span></div>'}).join("")},
+Urgent:function(){return'<div class="alert"><span class="bdg" style="background:#fff">ALERT</span><b>Severe thunderstorm watch</b><div class="src" style="color:#fecaca">Official advisory · until 21:00 · tap to acknowledge</div></div>'},
+General:function(){return[["Markets close higher on tech rally","Reuters","12m"],["City council approves transit plan","AP","40m"],["New battery tech promises faster charging","BBC","1h"]].map(function(n){return'<div class="row"><span>'+n[0]+'</span></div><div class="src">'+n[1]+' · '+n[2]+' ago</div>'}).join("")},
+Gaming:function(){return[["Major studio announces release date for new RPG","IGN","20m"],["GPU driver update fixes frame pacing issues","PC Gamer","1h"],["Esports finals set for next weekend","Dexerto","3h"]].map(function(n){return'<div class="row"><span>'+n[0]+'</span></div><div class="src">'+n[1]+' · '+n[2]+' ago</div>'}).join("")}};
+var K=Object.keys(C),tab="Weather",lock=0,ci=0;
+$("tabs").innerHTML=["All"].concat(K).map(function(k){return'<button data-t="'+k+'">'+k+'</button>'}).join("");
+function show(){var h=tab=="All"?K.map(function(k){return'<div class="src">'+k.toUpperCase()+'</div>'+C[k]()}).join(""):C[tab]();$("cd").innerHTML=h;[].forEach.call($("tabs").children,function(b){b.className=b.dataset.t==tab?"on":""})}
+$("tabs").onclick=function(e){var t=e.target.dataset.t;if(!t)return;tab=t;lock=1;show()};
+$("cd").onclick=function(){lock=!lock};
+var cyT;function cyc(){clearInterval(cyT);if(+S.cy)cyT=setInterval(function(){if(lock&&tab!="All"||document.hidden)return;if(tab=="All")return;ci=(ci+1)%K.length;tab=K[ci];show()},S.cy*1e3)}
+/* ---- views, settings, device ---- */
+[].forEach.call(document.querySelectorAll("[data-v]"),function(b){b.onclick=function(){document.body.className=b.dataset.v}});
+$("clk").addEventListener("click",function(e){if(e.target.closest("button"))return;document.body.className=document.body.className=="clock"?"":"clock"});
+var ids={s_face:"face",s_24:"h24",s_sec:"sec",s_ac:"ac",s_cy:"cy",s_br:"br",s_aw:"aw",s_bk:"bk"};
+function apply(){$("app").style.filter="brightness("+S.br+")";accent();cyc();wake()}
+Object.keys(ids).forEach(function(i){var e=$(i),k=ids[i];if(e.type=="checkbox")e.checked=!!+S[k];else e.value=S[k];e.onchange=function(){S[k]=e.type=="checkbox"?+e.checked:e.value;if(k=="face")fk=-1;save();apply();tick()}});
+$("gear").onclick=function(){$("set").className="o"};$("x").onclick=function(){$("set").className=""};
+var wl=null;function wake(){try{if(S.aw&&navigator.wakeLock&&!wl)navigator.wakeLock.request("screen").then(function(l){wl=l;l.onrelease=function(){wl=null}}).catch(function(){});else if(!S.aw&&wl){wl.release();wl=null}}catch(e){}}
+document.addEventListener("visibilitychange",function(){if(!document.hidden)wake()});
+try{navigator.getBattery().then(function(b){var u=function(){$("bat").textContent=(b.charging?"⚡ ":"🔋 ")+Math.round(b.level*100)+"%"};u();b.onlevelchange=b.onchargingchange=u})}catch(e){}
+$("wf").textContent=navigator.onLine?"📶 Online":"📵 Offline";addEventListener("offline",function(){$("wf").textContent="📵 Offline"});addEventListener("online",function(){$("wf").textContent="📶 Online"});
+/* burn-in care: tiny drift each minute */
+setInterval(function(){$("shift").style.transform="translate("+(Math.random()*6-3)+"px,"+(Math.random()*6-3)+"px)"},6e4);
+/* single 1s loop keeps CPU low */
+setInterval(function(){if(!document.hidden){tick();spTick()}},1e3);
+if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(function(){});
+loadTr();apply();show();tick();
+</script></body></html>
